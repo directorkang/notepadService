@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,15 +19,31 @@ namespace FileServer
             Console.WriteLine("FileServer starting");
 
             m_monitoredFolder = args.Length > 0 ? args[0] : Directory.GetCurrentDirectory();
-            Console.WriteLine($"Monitoring folder: {m_monitoredFolder}");
+            if (!Directory.Exists(m_monitoredFolder))
+            {
+                Console.WriteLine($"Error: Folder '{m_monitoredFolder}' does not exist. ");
+                return;
+            }
+
+            int port = args.Length > 1 && int.TryParse(args[1], out port) ? p : 13000;
+            Console.WriteLine($"Monitoring folder: {m_monitoredFolder} on port {port}");
+
 
             m_listener = new TcpListener(IPAddress.Any, 13000);
             m_listener.Start();
             Console.WriteLine("Server started");
-            while (true)
+
+            try
             {
-                var client = await m_listener.AcceptTcpClientAsync();
-                _ = handleClientAsync(client);
+                while (true)
+                {
+                    var client = await m_listener.AcceptTcpClientAsync();
+                    _ = handleClientAsync(client);
+                }
+            }
+            finally
+            {
+                Console.CancelKeyPress += (_, e) => { m_listener?.Stop(); };
             }
         }
 
@@ -49,37 +66,54 @@ namespace FileServer
 
                         Console.WriteLine($"Received command: {command}");
 
-                        if (command == "LIST_FILES")
+                        if (command == "LIST_FILE")
                         {
                             var files = Directory.GetFiles(m_monitoredFolder);
                             await writer.WriteLineAsync(string.Join("|", files));
                         }
-                        else if (command.StartsWith("GET_FILES:"))
+                        else if (command.StartsWith("GET_FILE:"))
                         {
                             var filePath = command.Substring(9);
-                            if (File.Exists(filePath))
+                            var fullPath = Path.GetFullPath(Path.Combine(m_monitoredFolder, filePath));
+
+                            if (!fullPath.StartsWith(m_monitoredFolder))
                             {
-                                var content = await File.ReadAllBytesAsync(filePath);
-                                await writer.WriteLineAsync(Convert.ToBase64String(content));
+                                await writer.WriteLineAsync("Error:Invalid Path");
+                                continue;
                             }
-                            else
+
+                            if (File.Exists(fullPath))
                             {
-                                await writer.WriteLineAsync("File_NOT_FOUND");
+                                try
+                                {
+                                    var content = await File.ReadAllBytesAsync(filePath);
+                                    await writer.WriteLineAsync(Convert.ToBase64String(content));
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    await writer.WriteLineAsync("File_NOT_FOUND");
+
+                                }
+
                             }
                         }
                         else if (command.StartsWith("SAVE_FILE:"))
                         {
                             var parts = command.Split(new[] { ':' }, 3);
-                            if (parts.Length == 3)
+                            if (parts.Length != 3)
                             {
-                                var filePath = Path.Combine(m_monitoredFolder, parts[1]);
-                                var content = Convert.FromBase64String(parts[2]);
-                                await File.WriteAllBytesAsync(filePath, content);
-                                await writer.WriteLineAsync("SAVE_SUCCESS");
+                                await writer.WriteLineAsync("ERROR:INVALID_SAVE_FORMAT");
+                                continue;
                             }
+                            var filePath = Path.Combine(m_monitoredFolder, parts[1]);
+                            var content = Convert.FromBase64String(parts[2]);
+                            await File.WriteAllBytesAsync(filePath, content);
+                            await writer.WriteLineAsync("SAVE_SUCCESS");
+
+                        }
                         }
                     }
-            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error handling client: {ex.Message}");
