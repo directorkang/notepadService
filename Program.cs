@@ -13,6 +13,7 @@ namespace FileServer
     {
         private static TcpListener m_listener;
         private static string m_monitoredFolder;
+        private static readonly object _fileLock = new object();
 
         static async Task Main(string[] args)
         {
@@ -25,7 +26,7 @@ namespace FileServer
                 return;
             }
 
-            int port = args.Length > 1 && int.TryParse(args[1], out port) ? p : 13000;
+            int port = args.Length > 1 && int.TryParse(args[1], out int parsedPort) ? parsedPort : 13000;
             Console.WriteLine($"Monitoring folder: {m_monitoredFolder} on port {port}");
 
 
@@ -55,6 +56,9 @@ namespace FileServer
                 using (var stream = client.GetStream())
                 using (var reader = new StreamReader(stream, Encoding.UTF8))
                 using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true })
+
+                {
+                    stream.ReadTimeout = 5000;
 
                     while (client.Connected)
                     {
@@ -112,8 +116,9 @@ namespace FileServer
                             await writer.WriteLineAsync("SAVE_SUCCESS");
 
                         }
-                        }
                     }
+                }
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error handling client: {ex.Message}");

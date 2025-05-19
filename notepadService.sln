@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "notepadService", "notepadService.csproj", "{9B722BEF-EB05-444A-8FDB-06D76FA22575}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "notepadService", "notepadService.csproj", "{9B722BEF-EB05-444A-8FDB-06D76FA22575}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPFnotepad", "WPFnotepad\WPFnotepad.csproj", "{C0306309-24C6-4DC8-BC6D-0F153C57FA69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9B722BEF-EB05-444A-8FDB-06D76FA22575}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B722BEF-EB05-444A-8FDB-06D76FA22575}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B722BEF-EB05-444A-8FDB-06D76FA22575}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0306309-24C6-4DC8-BC6D-0F153C57FA69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0306309-24C6-4DC8-BC6D-0F153C57FA69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0306309-24C6-4DC8-BC6D-0F153C57FA69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0306309-24C6-4DC8-BC6D-0F153C57FA69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
